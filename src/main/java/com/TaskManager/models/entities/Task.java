@@ -1,11 +1,14 @@
-package com.TaskManager.entities;
+package com.TaskManager.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -35,11 +38,29 @@ public class Task implements Serializable {
 
 	private LocalDateTime dueAt;
 
+	//Status of Task itself (Completed when all users that participant in this finished)
 	@Enumerated(EnumType.STRING)
 	private Status status;
 
-	@OneToMany(mappedBy = "taskId")
-	private List<TaskAssignment> taskAssignments;
+	@JsonIgnore
+	@OneToMany(mappedBy = "taskId", cascade = CascadeType.ALL)
+	private List<TaskAssignment> taskAssignments = new ArrayList<>();
+
+	public void merge(Task otherTask){
+		Field[] fields = this.getClass().getDeclaredFields();
+
+		for (Field field : fields) {
+			field.setAccessible(true);
+			try {
+				Object value = field.get(otherTask);
+				if (value != null) {
+					field.set(this, value);
+				}
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 
 }
 

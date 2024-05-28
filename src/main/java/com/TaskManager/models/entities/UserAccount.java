@@ -1,10 +1,12 @@
-package com.TaskManager.entities;
+package com.TaskManager.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -25,8 +27,9 @@ public class UserAccount implements Serializable {
 
     private String profilePicture;
 
-    @OneToMany(mappedBy = "userId")
-    private List<TaskAssignment> taskAssignments;
+    @JsonIgnore
+    @OneToMany(mappedBy = "userId", cascade = CascadeType.DETACH)
+    private List<TaskAssignment> taskAssignments = new ArrayList<>();
 
 
 }

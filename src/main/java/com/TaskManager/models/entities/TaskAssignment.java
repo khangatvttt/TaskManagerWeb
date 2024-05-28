@@ -1,4 +1,4 @@
-package com.TaskManager.entities;
+package com.TaskManager.models.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -22,6 +22,7 @@ public class TaskAssignment implements Serializable {
 
     private UserAccount assignBy;
 
+    //Progress each person participant in Task
     @Enumerated(EnumType.STRING)
     private Task.Status status;
 }
