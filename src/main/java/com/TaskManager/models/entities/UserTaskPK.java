@@ -2,14 +2,20 @@ package com.TaskManager.models.entities;
 
 import jakarta.persistence.Embeddable;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @Embeddable
 @Data
+@NoArgsConstructor
 public class UserTaskPK implements Serializable {
 
-    private Integer userId;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-    private Integer taskId;
+    private Integer taskExecutor;
+
+    private Integer task;
 }

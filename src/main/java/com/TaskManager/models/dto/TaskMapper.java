@@ -19,6 +19,11 @@ public class TaskMapper {
         return task;
     }
 
+    public static TaskDto toTaskDto(Task task) {
+        return new TaskDto(task.getTaskName(), task.getDescription(), task.getPriority(),
+                task.getDueAt(),task.getCreateAt(),task.getStatus());
+    }
+
     public static TaskAssignment toTaskAssignment(TaskCreationDto taskCreationDto){
         Task task = new Task();
         task.setTaskName(taskCreationDto.taskName());
@@ -29,16 +34,25 @@ public class TaskMapper {
         UserAccount assignedUser = new UserAccount();
         assignedUser.setId(taskCreationDto.assignedUser());
 
-        UserAccount createUser = new UserAccount();
-        createUser.setId(taskCreationDto.createUser());
+        UserAccount taskCreator = new UserAccount();
+        taskCreator.setId(taskCreationDto.taskCreator());
 
         TaskAssignment taskAssignment = new TaskAssignment();
-        taskAssignment.setTaskId(task);
+        taskAssignment.setTask(task);
 
 
-        taskAssignment.setUserId(assignedUser);
-        taskAssignment.setAssignBy(createUser);
+        taskAssignment.setTaskExecutor(assignedUser);
+        taskAssignment.setTaskCreator(taskCreator);
 
         return taskAssignment;
+    }
+
+    public static TaskAssignmentDto toTaskAssignmentDto(TaskAssignment taskAssignment){
+        TaskAssignmentDto taskAssignmentDto = new TaskAssignmentDto();
+        taskAssignmentDto.setTaskCreator(UserMapper.toUserDto(taskAssignment.getTaskCreator()));
+        taskAssignmentDto.setTaskExecutor(UserMapper.toUserDto(taskAssignment.getTaskExecutor()));
+        taskAssignmentDto.setStatus(taskAssignment.getStatus());
+        taskAssignmentDto.setTask(TaskMapper.toTaskDto(taskAssignment.getTask()));
+        return taskAssignmentDto;
     }
 }
