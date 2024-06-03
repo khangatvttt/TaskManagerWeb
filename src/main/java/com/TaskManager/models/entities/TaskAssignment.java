@@ -1,12 +1,14 @@
 package com.TaskManager.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
 @IdClass(UserTaskPK.class)
@@ -27,7 +29,9 @@ public class TaskAssignment implements Serializable {
     @JoinColumn(referencedColumnName = "id", name = "taskId")
     private Task task;
 
-    private UserAccount taskCreator;
+    private LocalDateTime assignedAt;
+
+    private Boolean isAccepted;
 
     //Progress of each person participant in Task
     @Enumerated(EnumType.STRING)

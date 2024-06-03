@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Fetch;
@@ -52,10 +53,17 @@ public class Task implements Serializable {
 	@Enumerated(EnumType.STRING)
 	private Status status;
 
+	@NotNull(message = "Please provide creator of this task")
+	@ManyToOne
+	@JoinColumn(name = "creatorId")
+	private UserAccount creator;
+
 	@JsonIgnore
 	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
 	@Fetch(FetchMode.JOIN)
 	private List<TaskAssignment> taskAssignments = new ArrayList<>();
+
+
 
 	public void merge(Task otherTask){
 		Field[] fields = this.getClass().getDeclaredFields();

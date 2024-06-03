@@ -5,6 +5,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,13 +14,12 @@ import org.springframework.web.context.request.WebRequest;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
 import java.util.Map;
 
 @ControllerAdvice
 public class ExceptionsHandler {
 
+    //Violate the constraint
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
@@ -39,6 +39,7 @@ public class ExceptionsHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
+    //Violate the unique constraint
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<?> handleDuplicateExceptions(DuplicateKeyException ex, WebRequest request){
         Map<String, Object> errors = new LinkedHashMap<>();
@@ -48,17 +49,19 @@ public class ExceptionsHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
+    //Request object that doesn't exist
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<?> handleNotFoundExceptions(NoSuchElementException ex, WebRequest request){
         Map<String, Object> errors = new LinkedHashMap<>();
         errors.put("timestamp", LocalDateTime.now());
         errors.put("status","Bad Request");
         errors.put("error", ex.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<?> handleNotFoundExceptions(MethodArgumentTypeMismatchException ex, WebRequest request){
+    //Send json request that didn't match the type
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleNotFoundExceptions(HttpMessageNotReadableException ex, WebRequest request){
         Map<String, Object> errors = new LinkedHashMap<>();
         errors.put("timestamp", LocalDateTime.now());
         errors.put("status","Bad Request");
@@ -66,6 +69,7 @@ public class ExceptionsHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
+    //Violate the constraint
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<?> handleValidationExceptions(ConstraintViolationException ex, WebRequest request) {
         Map<String, String> fieldsErrors = new HashMap<>();

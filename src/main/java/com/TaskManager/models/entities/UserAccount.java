@@ -41,10 +41,17 @@ public class UserAccount implements Serializable {
 
     private String profilePicture;
 
+    @OneToMany(mappedBy = "creator")
     @JsonIgnore
-    @OneToMany(mappedBy = "taskExecutor", cascade = CascadeType.DETACH)
+    private List<Task> createdTaskList = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "taskExecutor", cascade = CascadeType.ALL)
     @Fetch(FetchMode.JOIN)
     private List<TaskAssignment> taskAssignments = new ArrayList<>();
+
+
+
 
 
     public void merge(UserAccount otherUser){
