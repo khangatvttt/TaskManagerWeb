@@ -4,7 +4,6 @@ import com.TaskManager.models.dto.TaskDto;
 import com.TaskManager.models.dto.UserDto;
 import com.TaskManager.models.entities.Task;
 import com.TaskManager.models.entities.TaskAssignment;
-import com.TaskManager.models.entities.UserAccount;
 import com.TaskManager.services.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,7 +25,8 @@ public class TaskController {
 
     @GetMapping("{taskId}")
     public ResponseEntity<TaskDto> getTask(@PathVariable("taskId") Integer taskId){
-        return new ResponseEntity<>(taskService.getTask(taskId),HttpStatus.OK);
+        TaskDto taskDto = taskService.getTask(taskId);
+        return new ResponseEntity<>(taskDto, HttpStatus.OK);
     }
 
     //Create new Task
@@ -90,7 +90,13 @@ public class TaskController {
     //Get all users that participant in the task
     @GetMapping("/{taskId}/users")
     public ResponseEntity<List<UserDto>> getUsersInTask(@PathVariable("taskId") Integer taskId){
-        return new ResponseEntity<>(taskService.getUsersInTask(taskId),HttpStatus.OK);
+        List<UserDto> userDtoList = taskService.getExecutorInTask(taskId);
+        if (userDtoList!=null) {
+            return new ResponseEntity<>(userDtoList, HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
 
 

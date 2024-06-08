@@ -12,8 +12,11 @@ import com.TaskManager.repositories.TaskAssignmentRepository;
 import com.TaskManager.repositories.TaskRepository;
 import com.TaskManager.repositories.UserRepository;
 import jakarta.validation.Validation;
+import lombok.SneakyThrows;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.naming.NoPermissionException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -26,6 +29,7 @@ public class TaskService {
     private final UserRepository userRepository;
     private final TaskAssignmentRepository taskAssignmentRepository;
 
+
     public TaskService(TaskRepository taskRepository, UserRepository userRepository,
                        TaskAssignmentRepository taskAssignmentRepository) {
         this.taskRepository = taskRepository;
@@ -33,20 +37,34 @@ public class TaskService {
         this.taskAssignmentRepository = taskAssignmentRepository;
     }
 
+    @SneakyThrows
+    public void checkPermission(UserAccount owner){
+        UserAccount currentUser = (UserAccount) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!currentUser.getId().equals(owner.getId())) {
+            throw new NoPermissionException();
+        }
+
+    }
+
+    @SneakyThrows
     public TaskDto getTask(Integer taskId){
+        Task task = checkTaskId(taskId);
+        checkPermission(task.getCreator());
         return TaskMapper.toTaskDto(checkTaskId(taskId));
     }
 
     public void createTask(TaskDto taskDto) {
+        UserAccount currentUser = (UserAccount) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Task task = TaskMapper.toTask(taskDto);
         task.setCreateAt(LocalDateTime.now());
-        task.setCreator(checkUserId(taskDto.creatorId()));
+        task.setCreator(currentUser);
         task.setStatus(Task.Status.INPROGRESS);
         taskRepository.save(task);
     }
 
     public void updateTask(Integer taskId, Task updateTask) {
         Task task = checkTaskId(taskId);
+        checkPermission(task.getCreator());
         //Ignore some fields that user doesn't allow to update
         updateTask.setId(null);
         updateTask.setCreateAt(null);
@@ -60,11 +78,13 @@ public class TaskService {
 
     public void deleteTask(Integer taskId) {
         Task task = checkTaskId(taskId);
+        checkPermission(task.getCreator());
         taskRepository.delete(task);
     }
 
-    public List<UserDto> getUsersInTask(Integer taskId) {
+    public List<UserDto> getExecutorInTask(Integer taskId) {
         Task task = checkTaskId(taskId);
+        checkPermission(task.getCreator());
         List<TaskAssignment> taskAssignmentList = task.getTaskAssignments();
         return taskAssignmentList.stream()
                 .map(taskAssignment -> UserMapper.toUserDto(taskAssignment.getTaskExecutor()))
@@ -74,6 +94,7 @@ public class TaskService {
     public boolean assignTaskToUser(Integer taskId, Integer userId){
         Task task = checkTaskId(taskId);
         UserAccount user = checkUserId(userId);
+        checkPermission(task.getCreator());
         Optional<TaskAssignment> checkExist = taskAssignmentRepository.findById(new UserTaskPK(userId,taskId));
         if (checkExist.isPresent()){
             return false;
@@ -87,13 +108,15 @@ public class TaskService {
         return true;
     }
 
+    //Update status, refuse or accept task assignment
     public boolean updateTaskAssignment(Integer taskId, Integer userId, TaskAssignment taskAssignment){
         checkTaskId(taskId);
-        checkUserId(userId);
+        UserAccount user = checkUserId(userId);
         Optional<TaskAssignment> checkExist = taskAssignmentRepository.findById(new UserTaskPK(userId,taskId));
         if (checkExist.isEmpty()){
             return false;
         }
+        checkPermission(user);
         TaskAssignment updatedTaskAssignment = checkExist.get();
         if (taskAssignment.getStatus()!=null) {
             updatedTaskAssignment.setStatus(taskAssignment.getStatus());
@@ -105,12 +128,18 @@ public class TaskService {
         return true;
     }
 
+    @SneakyThrows
     public boolean cancelTaskAssignment(Integer taskId, Integer userId){
         Task task = checkTaskId(taskId);
         UserAccount user = checkUserId(userId);
         Optional<TaskAssignment> checkExist = taskAssignmentRepository.findById(new UserTaskPK(userId,taskId));
         if (checkExist.isEmpty()){
             return false;
+        }
+        UserAccount currentAuthUser = (UserAccount) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        //Only owner of the task or executor of task can cancel the assignment
+        if (!currentAuthUser.getId().equals(user.getId()) || !currentAuthUser.getId().equals(task.getCreator().getId())){
+            throw new NoPermissionException();
         }
         TaskAssignment taskAssignment = checkExist.get();
         List<TaskAssignment> taskAssignmentList = task.getTaskAssignments();

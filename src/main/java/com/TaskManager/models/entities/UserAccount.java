@@ -9,17 +9,20 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
 @Data
 @NoArgsConstructor
-public class UserAccount implements Serializable {
+public class UserAccount implements Serializable, UserDetails {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -40,6 +43,8 @@ public class UserAccount implements Serializable {
     private String name;
 
     private String profilePicture;
+
+    private Boolean active;
 
     @OneToMany(mappedBy = "creator")
     @JsonIgnore
@@ -68,6 +73,36 @@ public class UserAccount implements Serializable {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return active;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return active;
     }
 }
 
