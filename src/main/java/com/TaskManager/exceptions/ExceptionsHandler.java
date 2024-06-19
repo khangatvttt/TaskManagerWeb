@@ -1,9 +1,9 @@
 package com.TaskManager.exceptions;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
+import jakarta.mail.MessagingException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.websocket.EncodeException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,15 +63,15 @@ public class ExceptionsHandler {
         return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
     }
 
-//    //Send json request that didn't match the type
-//    @ExceptionHandler(HttpMessageNotReadableException.class)
-//    public ResponseEntity<?> handleNotFoundExceptions(HttpMessageNotReadableException ex, WebRequest request){
-//        Map<String, Object> errors = new LinkedHashMap<>();
-//        errors.put("timestamp", LocalDateTime.now());
-//        errors.put("status","Bad Request");
-//        errors.put("error", "Input is invalid");
-//        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
-//    }
+    //Send json request that didn't match the type
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleNotFoundExceptions(HttpMessageNotReadableException ex, WebRequest request){
+        Map<String, Object> errors = new LinkedHashMap<>();
+        errors.put("timestamp", LocalDateTime.now());
+        errors.put("status","Bad Request");
+        errors.put("error", "Input is invalid");
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
 
     //Violate the constraint
     @ExceptionHandler(ConstraintViolationException.class)
@@ -94,7 +94,7 @@ public class ExceptionsHandler {
     public ResponseEntity<?> handleBadCredential(BadCredentialsException ex, WebRequest request){
         Map<String, Object> errors = new LinkedHashMap<>();
         errors.put("timestamp", LocalDateTime.now());
-        errors.put("status","Bad Request");
+        errors.put("status","Unauthorized");
         errors.put("error", ex.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
     }
@@ -108,6 +108,23 @@ public class ExceptionsHandler {
         return new ResponseEntity<>(errors, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(MessagingException.class)
+    public ResponseEntity<?> handleMessagingException(MessagingException ex, WebRequest request){
+        Map<String, Object> errors = new LinkedHashMap<>();
+        errors.put("timestamp", LocalDateTime.now());
+        errors.put("status","Can't send email");
+        errors.put("error", ex.getMessage());
+        return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(EncodeException.class)
+    public ResponseEntity<?> handleEncodeException(EncodeException ex, WebRequest request){
+        Map<String, Object> errors = new LinkedHashMap<>();
+        errors.put("timestamp", LocalDateTime.now());
+        errors.put("status","Bad request");
+        errors.put("error", "Unsupported character");
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
 
 }
 

@@ -24,12 +24,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("")
-    public ResponseEntity<Void> createUser(@Valid @RequestBody UserAccount userAccount){
-        userService.createUser(userAccount);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable("userId") Integer userId){
         userService.deleteUser(userId);

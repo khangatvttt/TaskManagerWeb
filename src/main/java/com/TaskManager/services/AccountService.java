@@ -6,6 +6,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class AccountService {
     private final UserRepository userRepository;
@@ -18,8 +20,8 @@ public class AccountService {
         this.authenticationManager = authenticationManager;
     }
 
-    public void signup(UserAccount user) {
-        userService.createUser(user);
+    public void signup(UserAccount user, String baseURL) {
+        userService.createUser(user, baseURL);
     }
 
     public UserAccount authenticate(String email, String password) {
@@ -29,5 +31,19 @@ public class AccountService {
 
         return userRepository.findByEmail(email)
                 .orElseThrow();
+    }
+
+    public boolean verifyEmail(String code){
+        Optional<UserAccount> userOpt = userRepository.findByVerificationCode(code);
+        if (userOpt.isEmpty()){
+            return false;
+        }
+        UserAccount user = userOpt.get();
+        user.setVerificationCode(null);
+        if (user.getActive()==null){
+            user.setActive(true);
+        }
+        userRepository.save(user);
+        return true;
     }
 }

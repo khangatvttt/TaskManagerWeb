@@ -46,6 +46,9 @@ public class UserAccount implements Serializable, UserDetails {
 
     private Boolean active;
 
+    private String verificationCode;
+
+
     @OneToMany(mappedBy = "creator")
     @JsonIgnore
     private List<Task> createdTaskList = new ArrayList<>();
