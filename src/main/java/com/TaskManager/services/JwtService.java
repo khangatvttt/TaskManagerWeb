@@ -1,5 +1,6 @@
 package com.TaskManager.services;
 
+import com.TaskManager.models.entities.UserAccount;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -24,21 +25,25 @@ public class JwtService {
     private long jwtExpiration;
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token).getSubject();
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    public String getPurpose(String token){
+        return (String) extractClaim(token).get("purpose");
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public Claims extractClaim(String token) {
+        return extractAllClaims(token);
+    }
+
+    public String generateLoginToken(UserDetails userDetails) {
         return Jwts
                 .builder()
                 .setClaims(new HashMap<>())
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .claim("purpose","authenticate")
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -57,7 +62,7 @@ public class JwtService {
     }
 
     private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        return extractClaim(token).getExpiration();
     }
 
     private Claims extractAllClaims(String token) {
@@ -72,5 +77,17 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String generateResetPasswordToken(UserAccount user){
+        return Jwts
+                .builder()
+                .setClaims(new HashMap<>())
+                .setSubject(user.getEmail())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .claim("purpose","reset-password")
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 }

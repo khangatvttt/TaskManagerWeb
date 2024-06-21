@@ -70,6 +70,9 @@ public class UserService {
     public void updateUser(UserAccount updateUser, Integer userId){
         UserAccount user = checkUserId(userId);
         checkPermission(user);
+        if (updateUser.getPassword()!=null){
+            updateUser.setPassword(passwordEncoder.encode(updateUser.getPassword()));
+        }
         user.merge(updateUser);
         userRepository.save(user);
     }

@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -95,10 +97,18 @@ public class ExceptionsHandler {
         Map<String, Object> errors = new LinkedHashMap<>();
         errors.put("timestamp", LocalDateTime.now());
         errors.put("status","Unauthorized");
-        errors.put("error", ex.getMessage());
+        errors.put("error", "Email or password is invalid!");
         return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<?> handleNotActiveAccount(LockedException ex, WebRequest request){
+        Map<String, Object> errors = new LinkedHashMap<>();
+        errors.put("timestamp", LocalDateTime.now());
+        errors.put("status","Unauthorized");
+        errors.put("error", "This account is not activated yet");
+        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+    }
     @ExceptionHandler(NoPermissionException.class)
     public ResponseEntity<?> handlePermission(NoPermissionException ex, WebRequest request){
         Map<String, Object> errors = new LinkedHashMap<>();

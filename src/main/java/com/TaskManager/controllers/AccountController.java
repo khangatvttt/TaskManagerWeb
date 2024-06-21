@@ -21,17 +21,7 @@ public class AccountController {
 
     @GetMapping("/signup")
     public ResponseEntity<Void> register(HttpServletRequest request, @RequestBody UserAccount user) {
-        String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
-        String baseURL;
-        if ((serverPort == 80 && request.getScheme().equals("http")) ||
-                (serverPort == 443 && request.getScheme().equals("https"))) {
-            baseURL = serverName;
-        } else {
-            baseURL = serverName + ":" + serverPort;
-        }
-
-        accountService.signup(user, baseURL);
+        accountService.signup(user, getBaseURL(request));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -41,7 +31,7 @@ public class AccountController {
         String pass = data.split(";")[1];
         UserAccount authenticatedUser = accountService.authenticate(username, pass);
 
-        String jwtToken = jwtService.generateToken(authenticatedUser);
+        String jwtToken = jwtService.generateLoginToken(authenticatedUser);
 
 
         return new ResponseEntity<>(jwtToken, HttpStatus.OK);
@@ -51,5 +41,24 @@ public class AccountController {
     public ResponseEntity<Void> verifyEmail(@RequestParam("code") String code) {
         boolean success = accountService.verifyEmail(code);
         return new ResponseEntity<>(success?HttpStatus.OK:HttpStatus.BAD_REQUEST);
+    }
+
+    @GetMapping("/forget-password")
+    public ResponseEntity<Void> forgetPassword(HttpServletRequest request, @RequestParam("id") Integer id) {
+        accountService.requestResetPassword(id, getBaseURL(request));
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private String getBaseURL(HttpServletRequest request){
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        String baseURL;
+        if ((serverPort == 80 && request.getScheme().equals("http")) ||
+                (serverPort == 443 && request.getScheme().equals("https"))) {
+            baseURL = serverName;
+        } else {
+            baseURL = serverName + ":" + serverPort;
+        }
+        return baseURL;
     }
 }

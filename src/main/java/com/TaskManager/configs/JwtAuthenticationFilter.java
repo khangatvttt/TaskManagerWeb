@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        //Don't filter /auth endpoint
+        //Not filter the /auth endpoint
         if (request.getRequestURI().startsWith("/auth")){
             filterChain.doFilter(request, response);
             return;
@@ -56,6 +56,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             final String jwt = authHeader.substring(7);
             final String userEmail = jwtService.extractUsername(jwt);
+            final String purpose = jwtService.getPurpose(jwt);
+            if (!purpose.equals("authenticate")){
+                throw new JwtException("Invalid token!");
+            }
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -76,7 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         catch (Exception e){
             response.setStatus(401);
-            //response.getOutputStream().write("Token is invalid or expired".getBytes());
             response.getOutputStream().write(e.getMessage().getBytes());
             return;
         }
