@@ -41,6 +41,7 @@ public class JwtService {
                 .builder()
                 .setClaims(new HashMap<>())
                 .setSubject(userDetails.getUsername())
+                .claim("uid",((UserAccount)(userDetails)).getId().toString())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .claim("purpose","authenticate")

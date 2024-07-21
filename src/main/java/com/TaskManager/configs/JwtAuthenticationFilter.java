@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONObject;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -48,7 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(401);
-            response.getOutputStream().write("Token is missing".getBytes());
+            response.setContentType("application/json");
+
+            JSONObject json = new JSONObject();
+            json.put("timestamp", LocalDateTime.now());
+            json.put("status", "Unauthorized");
+            json.put("error", "Token is missing!");
+            response.getOutputStream().write(json.toString().getBytes());
+            response.getOutputStream().flush();
             return;
         }
 
@@ -80,7 +89,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         catch (Exception e){
             response.setStatus(401);
-            response.getOutputStream().write(e.getMessage().getBytes());
+            response.setContentType("application/json");
+
+            JSONObject json = new JSONObject();
+            json.put("timestamp", LocalDateTime.now());
+            json.put("status", "Unauthorized");
+            json.put("error", e.getMessage());
+            response.getOutputStream().write(json.toString().getBytes());
+            response.getOutputStream().flush();
             return;
         }
         filterChain.doFilter(request, response);

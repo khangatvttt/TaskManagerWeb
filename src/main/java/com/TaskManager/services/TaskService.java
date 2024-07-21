@@ -13,6 +13,7 @@ import com.TaskManager.repositories.TaskRepository;
 import com.TaskManager.repositories.UserRepository;
 import jakarta.validation.Validation;
 import lombok.SneakyThrows;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -55,11 +56,26 @@ public class TaskService {
 
     public void createTask(TaskDto taskDto) {
         UserAccount currentUser = (UserAccount) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        //Check name unique
+        Optional<Task> taskOpt = taskRepository.findByTaskNameAndCreator(taskDto.taskName(),currentUser);
+        if (taskOpt.isPresent()){
+            throw new DuplicateKeyException("You've already had this task name!");
+        }
+        //Create Task
         Task task = TaskMapper.toTask(taskDto);
         task.setCreateAt(LocalDateTime.now());
         task.setCreator(currentUser);
         task.setStatus(Task.Status.INPROGRESS);
         taskRepository.save(task);
+
+        //Assign task to its owner
+        TaskAssignment taskAssignment = new TaskAssignment();
+        taskAssignment.setStatus(Task.Status.INPROGRESS);
+        taskAssignment.setIsAccepted(true);
+        taskAssignment.setTaskExecutor(currentUser);
+        taskAssignment.setTask(task);
+        taskAssignment.setAssignedAt(LocalDateTime.now());
+        taskAssignmentRepository.save(taskAssignment);
     }
 
     public void updateTask(Integer taskId, Task updateTask) {

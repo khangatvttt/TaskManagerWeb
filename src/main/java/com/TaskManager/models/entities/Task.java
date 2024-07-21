@@ -25,7 +25,7 @@ import java.util.List;
 public class Task implements Serializable {
 
 	public static enum Status {
-		PENDING,
+		DELAYED,
 		INPROGRESS,
 		COMPLETED,
 		CANCELLED

@@ -1,6 +1,7 @@
 package com.TaskManager.controllers;
 
 import com.TaskManager.models.dto.TaskAssignmentDto;
+import com.TaskManager.models.dto.TaskDto;
 import com.TaskManager.models.dto.UserDto;
 import com.TaskManager.models.entities.Task;
 import com.TaskManager.models.entities.TaskAssignment;
@@ -42,7 +43,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/tasks")
-    public ResponseEntity<List<TaskAssignmentDto>> getTasksByUser(@PathVariable("userId") Integer userId){
+    public ResponseEntity<List<TaskDto>> getTasksByUser(@PathVariable("userId") Integer userId){
         return new ResponseEntity<>(userService.getTasksByUser(userId), HttpStatus.OK);
     }
 

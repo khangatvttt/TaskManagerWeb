@@ -1,9 +1,7 @@
 package com.TaskManager.services;
 
-import com.TaskManager.models.dto.TaskAssignmentDto;
-import com.TaskManager.models.dto.TaskMapper;
-import com.TaskManager.models.dto.UserDto;
-import com.TaskManager.models.dto.UserMapper;
+import com.TaskManager.models.dto.*;
+import com.TaskManager.models.entities.Task;
 import com.TaskManager.models.entities.TaskAssignment;
 import com.TaskManager.models.entities.UserAccount;
 import com.TaskManager.repositories.TaskAssignmentRepository;
@@ -77,13 +75,14 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<TaskAssignmentDto> getTasksByUser(Integer userid){
+    public List<TaskDto> getTasksByUser(Integer userid){
         UserAccount user = checkUserId(userid);
         checkPermission(user);
         List<TaskAssignment> taskAssignmentList = user.getTaskAssignments();
         return taskAssignmentList.stream()
-                .map(TaskMapper::toTaskAssignmentDto)
-                .collect(Collectors.toList());
+                .map(TaskAssignment::getTask)
+                .map(TaskMapper::toTaskDto)
+                .toList();
     }
 
     public UserAccount checkUserId(Integer userId){

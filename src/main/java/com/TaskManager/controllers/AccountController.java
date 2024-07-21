@@ -1,4 +1,5 @@
 package com.TaskManager.controllers;
+import com.TaskManager.models.dto.LoginDto;
 import com.TaskManager.models.entities.UserAccount;
 import com.TaskManager.services.AccountService;
 import com.TaskManager.services.JwtService;
@@ -25,11 +26,9 @@ public class AccountController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<String> authenticate(@RequestBody String data) {
-        String username = data.split(";")[0];
-        String pass = data.split(";")[1];
-        UserAccount authenticatedUser = accountService.authenticate(username, pass);
+    @PostMapping("/login")
+    public ResponseEntity<String> authenticate(@RequestBody LoginDto loginInfo) {
+        UserAccount authenticatedUser = accountService.authenticate(loginInfo.email(), loginInfo.password());
 
         String jwtToken = jwtService.generateLoginToken(authenticatedUser);
 
