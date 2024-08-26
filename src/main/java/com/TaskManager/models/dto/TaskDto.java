@@ -12,9 +12,6 @@ public record TaskDto(
         @NotBlank(message = "Please provide task name")
         String taskName,
         String description,
-        @Max(value = 10, message = "The priority can only be between 1-10")
-        @Min(value = 1, message = "The priority can only be between 1-10")
-        int priority,
         LocalDateTime dueAt,
         LocalDateTime createAt,
         @NotNull(message = "Please provide creator of this task")

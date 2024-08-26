@@ -8,9 +8,10 @@ import java.time.LocalDateTime;
 
 
 public record TaskAssignmentDto (
-    UserDto taskExecutor,
-    TaskDto task,
-    LocalDateTime assignedAt,
+    Integer taskId,
+    String taskName,
+    String subTask,
+    LocalDateTime dueAt,
     Task.Status status){
 
 }

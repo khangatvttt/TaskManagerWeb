@@ -11,6 +11,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -41,10 +43,6 @@ public class Task implements Serializable {
 
 	private String description;
 
-	@Max(value = 10, message = "The priority can only be between 1-10")
-	@Min(value = 1, message = "The priority can only be between 1-10")
-	private int priority;
-
 	private LocalDateTime createAt;
 
 	private LocalDateTime dueAt;
@@ -59,8 +57,9 @@ public class Task implements Serializable {
 	private UserAccount creator;
 
 	@JsonIgnore
-	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "task")
 	@Fetch(FetchMode.JOIN)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private List<TaskAssignment> taskAssignments = new ArrayList<>();
 
 

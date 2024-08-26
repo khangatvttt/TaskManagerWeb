@@ -43,7 +43,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/tasks")
-    public ResponseEntity<List<TaskDto>> getTasksByUser(@PathVariable("userId") Integer userId){
+    public ResponseEntity<List<TaskAssignmentDto>> getTasksByUser(@PathVariable("userId") Integer userId){
         return new ResponseEntity<>(userService.getTasksByUser(userId), HttpStatus.OK);
     }
 

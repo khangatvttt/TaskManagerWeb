@@ -53,8 +53,12 @@ public class UserAccount implements Serializable, UserDetails {
     @JsonIgnore
     private List<Task> createdTaskList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "receiver")
     @JsonIgnore
-    @OneToMany(mappedBy = "taskExecutor", cascade = CascadeType.ALL)
+    private List<Notification> notificationList = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "taskExecutor")
     @Fetch(FetchMode.JOIN)
     private List<TaskAssignment> taskAssignments = new ArrayList<>();
 

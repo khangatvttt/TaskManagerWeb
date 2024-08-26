@@ -45,7 +45,7 @@ public class UserService {
         if (userRepository.existsByEmail(userAccount.getEmail())){
             throw new DuplicateKeyException("This email have been used");
         }
-        userAccount.setActive(false);
+        userAccount.setActive(null);
         userAccount.setVerificationCode(UUID.randomUUID().toString());
         userAccount.setPassword(passwordEncoder.encode(userAccount.getPassword()));
         sendVerificationEmail(userAccount,baseURL);
@@ -75,13 +75,12 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<TaskDto> getTasksByUser(Integer userid){
+    public List<TaskAssignmentDto> getTasksByUser(Integer userid){
         UserAccount user = checkUserId(userid);
         checkPermission(user);
         List<TaskAssignment> taskAssignmentList = user.getTaskAssignments();
         return taskAssignmentList.stream()
-                .map(TaskAssignment::getTask)
-                .map(TaskMapper::toTaskDto)
+                .map(TaskMapper::toTaskAssignmentDto)
                 .toList();
     }
 

@@ -71,7 +71,8 @@ public class ExceptionsHandler {
         Map<String, Object> errors = new LinkedHashMap<>();
         errors.put("timestamp", LocalDateTime.now());
         errors.put("status","Bad Request");
-        errors.put("error", "Input is invalid");
+        //errors.put("error", "Json format is invalid");
+        errors.put("error", ex.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 

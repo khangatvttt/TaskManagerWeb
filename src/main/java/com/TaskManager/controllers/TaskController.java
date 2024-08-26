@@ -1,5 +1,6 @@
 package com.TaskManager.controllers;
 
+import com.TaskManager.models.dto.TaskDetailDto;
 import com.TaskManager.models.dto.TaskDto;
 import com.TaskManager.models.dto.UserDto;
 import com.TaskManager.models.entities.Task;
@@ -50,11 +51,19 @@ public class TaskController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    //Get Task Assignment
+    @GetMapping("/{taskId}/user/{userId}")
+    public ResponseEntity<TaskDetailDto> assignTaskToUser(@PathVariable("taskId") Integer taskId,
+                                                          @PathVariable("userId") Integer userId){
+        TaskDetailDto result = taskService.getTaskAssignment(userId, taskId);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
     //Assign Task to User
     @PostMapping("/{taskId}/user/{userId}")
     public ResponseEntity<String> assignTaskToUser(@PathVariable("taskId") Integer taskId,
-                                                 @PathVariable("userId") Integer userId){
-        boolean flag = taskService.assignTaskToUser(taskId,userId);
+                                                 @PathVariable("userId") Integer userId,
+                                                   @RequestBody String subTask){
+        boolean flag = taskService.assignTaskToUser(taskId,userId, subTask);
         if (flag) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
@@ -79,7 +88,7 @@ public class TaskController {
     @DeleteMapping("/{taskId}/user/{userId}")
     public ResponseEntity<String> cancelTaskAssignment(@PathVariable("taskId") Integer taskId,
                                                        @PathVariable("userId") Integer userId){
-        boolean flag = taskService.cancelTaskAssignment(taskId,userId);
+        boolean flag = taskService.abandonTaskAssignment(taskId,userId);
         if (flag){
             return new ResponseEntity<>(HttpStatus.OK);
         }
