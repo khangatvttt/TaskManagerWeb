@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,6 +42,11 @@ public class UserAccount implements Serializable, UserDetails {
 
     @NotBlank(message = "Name can't be leave empty")
     private String name;
+
+    //1 is Male, 0 is Female
+    private Boolean gender;
+
+    private LocalDate birthdate;
 
     private String profilePicture;
 

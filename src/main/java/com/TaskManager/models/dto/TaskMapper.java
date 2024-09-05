@@ -16,7 +16,7 @@ public class TaskMapper {
 
     public static TaskDto toTaskDto(Task task) {
         return new TaskDto(task.getTaskName(), task.getDescription(),
-                task.getDueAt(),task.getCreateAt(),task.getCreator().getId(),task.getStatus());
+                task.getDueAt(),task.getCreateAt(),null,task.getCreator().getId(),task.getStatus());
     }
 
 
@@ -37,8 +37,10 @@ public class TaskMapper {
                 taskAssignment.getTask().getCreateAt(),
                 taskAssignment.getTask().getDueAt(),
                 taskAssignment.getTask().getCreator().getName(),
+                taskAssignment.getTask().getCreator().getId(),
                 taskAssignment.getTask().getTaskAssignments().size(),
                 taskAssignment.getSubTaskName(),
+                taskAssignment.getTask().getStatus(),
                 taskAssignment.getStatus(),
                 taskAssignment.getAssignedAt(),
                 taskAssignment.getPriority(),

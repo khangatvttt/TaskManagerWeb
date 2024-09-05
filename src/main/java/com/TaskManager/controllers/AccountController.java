@@ -20,9 +20,9 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @GetMapping("/signup")
+    @PostMapping("/signup")
     public ResponseEntity<Void> register(HttpServletRequest request, @RequestBody UserAccount user) {
-        accountService.signup(user, getBaseURL(request));
+        accountService.signup(user);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

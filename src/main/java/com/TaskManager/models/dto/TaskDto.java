@@ -14,6 +14,9 @@ public record TaskDto(
         String description,
         LocalDateTime dueAt,
         LocalDateTime createAt,
+        @Max(value = 10, message = "The priority can only be between 1-10")
+        @Min(value = 1, message = "The priority can only be between 1-10")
+        Integer priority,
         @NotNull(message = "Please provide creator of this task")
         int creatorId,
         Task.Status status) {

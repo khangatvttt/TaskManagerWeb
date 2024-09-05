@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
 
 @Service
 public class UserService {
@@ -41,14 +41,21 @@ public class UserService {
         this.mailSender = mailSender;
     }
 
-    public void createUser(UserAccount userAccount, String baseURL){
-        if (userRepository.existsByEmail(userAccount.getEmail())){
-            throw new DuplicateKeyException("This email have been used");
+    public void createUser(UserAccount userAccount){
+        Optional<UserAccount> userOpt = userRepository.findByEmail(userAccount.getEmail());
+        if (userOpt.isPresent()) {
+            if (userOpt.get().getActive()) {
+                throw new DuplicateKeyException("This email have been used");
+            }
+            else {
+                userRepository.delete(userOpt.get());
+            }
         }
-        userAccount.setActive(null);
+        userAccount.setActive(false);
         userAccount.setVerificationCode(UUID.randomUUID().toString());
         userAccount.setPassword(passwordEncoder.encode(userAccount.getPassword()));
-        sendVerificationEmail(userAccount,baseURL);
+        userAccount.setProfilePicture("https://firebasestorage.googleapis.com/v0/b/task-manager-1eddc.appspot.com/o/defaultAvatar.jpg?alt=media&token=e7440e47-2b7a-4bba-b062-575b0c0443e9"); //default avatar
+        sendVerificationEmail(userAccount);
         userRepository.save(userAccount);
 
     }
@@ -102,7 +109,8 @@ public class UserService {
     }
 
     @SneakyThrows
-    private void sendVerificationEmail(UserAccount user, String baseURL) {
+    private void sendVerificationEmail(UserAccount user) {
+        String baseURL = "localhost:3000";
         String senderName = "Task Manager App";
         String from = "thanhlongfnd@gmail.com";
         String subject = "Verify your registration";
@@ -120,7 +128,7 @@ public class UserService {
         baseURL = "http://"+ baseURL;
 
         content = content.replace("[[name]]", user.getName());
-        String verifyURL = baseURL + "/auth/verify?code=" + user.getVerificationCode();
+        String verifyURL = baseURL + "/verify?code=" + user.getVerificationCode();
         content = content.replace("[[URL]]", verifyURL);
 
         helper.setText(content, true);

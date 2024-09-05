@@ -75,13 +75,14 @@ public class TaskService {
         taskAssignment.setTask(task);
         taskAssignment.setProgression(0);
         taskAssignment.setSubTaskName("Manager of this task");
-        taskAssignment.setPriority(3);
+        taskAssignment.setPriority(taskDto.priority());
         taskAssignment.setAssignedAt(LocalDateTime.now());
         taskAssignmentRepository.save(taskAssignment);
     }
 
     public void updateTask(Integer taskId, Task updateTask) {
         Task task = checkTaskId(taskId);
+        List<TaskAssignment> taskAssignmentList = task.getTaskAssignments();
         checkPermission(task.getCreator());
         //Ignore some fields that user doesn't allow to update
         updateTask.setId(null);
@@ -91,6 +92,19 @@ public class TaskService {
         task.merge(updateTask);
         Validation.buildDefaultValidatorFactory().getValidator().validate(task);
         taskRepository.save(task);
+
+        task = checkTaskId(taskId);
+        //Notify to all members of this task about changes
+        for (TaskAssignment assignment : taskAssignmentList){
+            if (assignment.getIsAccepted()) {
+                Notification notification = new Notification();
+                notification.setTime(LocalDateTime.now());
+                notification.setReceiver(assignment.getTaskExecutor());
+                notification.setNotification("\""+task.getTaskName() + "\" task has been updated by manager.");
+                notification.setRead(false);
+                notificationRepository.save(notification);
+            }
+        }
     }
 
 
@@ -152,6 +166,17 @@ public class TaskService {
         TaskAssignment updatedTaskAssignment = checkExist.get();
         updatedTaskAssignment.merge(taskAssignment);
         taskAssignmentRepository.save(updatedTaskAssignment);
+
+        //Notify to owner of task about changes
+        if (!user.getId().equals(updatedTaskAssignment.getTask().getCreator().getId())) {
+            Notification notification = new Notification();
+            notification.setRead(false);
+            notification.setTime(LocalDateTime.now());
+            notification.setReceiver(updatedTaskAssignment.getTask().getCreator());
+            notification.setNotification(user.getName() + " has updated " + (user.getGender() ? "his" : "her")
+                    + " personal status in \"" + updatedTaskAssignment.getTask().getTaskName() + "\" task.");
+            notificationRepository.save(notification);
+        }
         return true;
     }
 

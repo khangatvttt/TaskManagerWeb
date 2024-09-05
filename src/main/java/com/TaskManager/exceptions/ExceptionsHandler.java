@@ -67,7 +67,7 @@ public class ExceptionsHandler {
 
     //Send json request that didn't match the type
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<?> handleNotFoundExceptions(HttpMessageNotReadableException ex, WebRequest request){
+    public ResponseEntity<?> handleHttpMessageNotReadableExceptions(HttpMessageNotReadableException ex, WebRequest request){
         Map<String, Object> errors = new LinkedHashMap<>();
         errors.put("timestamp", LocalDateTime.now());
         errors.put("status","Bad Request");

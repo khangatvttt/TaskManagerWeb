@@ -36,8 +36,8 @@ public class AccountService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void signup(UserAccount user, String baseURL) {
-        userService.createUser(user, baseURL);
+    public void signup(UserAccount user) {
+        userService.createUser(user);
     }
 
     public UserAccount authenticate(String email, String password) {
@@ -56,9 +56,7 @@ public class AccountService {
         }
         UserAccount user = userOpt.get();
         user.setVerificationCode(null);
-        if (user.getActive()==null){
-            user.setActive(true);
-        }
+        user.setActive(true);
         userRepository.save(user);
         return true;
     }
