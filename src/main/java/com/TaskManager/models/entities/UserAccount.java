@@ -15,7 +15,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,6 +52,12 @@ public class UserAccount implements Serializable, UserDetails {
 
     private String profilePicture;
 
+    private LocalDateTime createAt;
+
+    private String address;
+
+    private String mainJob;
+
     private Boolean active;
 
     private String verificationCode;
@@ -73,9 +81,16 @@ public class UserAccount implements Serializable, UserDetails {
 
 
     public void merge(UserAccount otherUser){
+        //Prevent user update some fields
+        otherUser.setActive(null);
+        otherUser.setVerificationCode(null);
+        otherUser.setId(null);
         Field[] fields = this.getClass().getDeclaredFields();
 
         for (Field field : fields) {
+            if (Modifier.isFinal(field.getModifiers())) {
+                continue;
+            }
             field.setAccessible(true);
             try {
                 Object value = field.get(otherUser);

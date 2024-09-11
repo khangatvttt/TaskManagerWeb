@@ -2,11 +2,10 @@ package com.TaskManager.controllers;
 
 import com.TaskManager.services.ImageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,5 +17,10 @@ public class ImageController {
     @PostMapping
     public String upload(@RequestParam("file") MultipartFile multipartFile) {
         return imageService.upload(multipartFile);
+    }
+
+    @DeleteMapping
+    public boolean delete(@RequestBody String url) throws IOException {
+        return imageService.deleteImage(url);
     }
 }

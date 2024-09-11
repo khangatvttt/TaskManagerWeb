@@ -9,6 +9,14 @@ public class UserMapper {
     }
 
     public static UserDto toUserDto(UserAccount userAccount){
-        return new UserDto(userAccount.getName(),userAccount.getEmail(),userAccount.getProfilePicture());
+        return new UserDto(userAccount.getName()
+                ,userAccount.getEmail()
+                ,userAccount.getProfilePicture()
+                ,userAccount.getGender()
+                ,userAccount.getBirthdate()
+                ,userAccount.getCreateAt()
+                ,userAccount.getMainJob()
+                ,userAccount.getAddress()
+        );
     }
 }

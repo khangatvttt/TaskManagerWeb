@@ -10,4 +10,6 @@ import java.util.List;
 
 public interface TaskAssignmentRepository extends JpaRepository<TaskAssignment, UserTaskPK> {
     void deleteAllByTask(Task task);
+    long countByTaskExecutorAndStatus(UserAccount taskExecutor, Task.Status status);
+
 }

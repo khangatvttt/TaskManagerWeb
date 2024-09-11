@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task,Integer> {
     Optional<Task> findByTaskNameAndCreator(String taskName, UserAccount creator);
+    long countByCreator(UserAccount creator);
 }

@@ -2,21 +2,27 @@ package com.TaskManager.services;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.*;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.StorageClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class ImageService {
+
+    private static final List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/gif");
+
 
     private String uploadFileToFirebase(InputStream inputStream, String fileName) throws IOException {
         BlobId blobId = BlobId.of("task-manager-1eddc.appspot.com", fileName);
@@ -38,6 +44,11 @@ public class ImageService {
 
     public String upload(MultipartFile multipartFile) {
         try {
+            String fileType = multipartFile.getContentType();
+            if (!allowedTypes.contains(fileType)) {
+                return null;
+            }
+
             String fileName = multipartFile.getOriginalFilename();
             fileName = UUID.randomUUID().toString().concat(this.getExtension(fileName));
 
@@ -49,7 +60,24 @@ public class ImageService {
             return URL;
         } catch (Exception e) {
             e.printStackTrace();
-            return "Image couldn't upload, something went wrong";
+            return null;
         }
     }
+
+    public boolean deleteImage(String url){
+        String[] parts = url.split("[/?]");
+        String fileName = parts[parts.length - 2];
+        BlobId blobId = BlobId.of("task-manager-1eddc.appspot.com", fileName);
+        InputStream credentialsStream = ImageService.class.getClassLoader().getResourceAsStream("firebase-config.json");
+        try {
+            Credentials credentials = GoogleCredentials.fromStream(credentialsStream);
+            Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+            return storage.delete(blobId);
+        }
+        catch (Exception e){
+            return false;
+        }
+    }
+
 }
+

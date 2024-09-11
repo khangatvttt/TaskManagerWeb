@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.naming.NoPermissionException;
 import java.time.LocalDateTime;
@@ -134,6 +135,15 @@ public class ExceptionsHandler {
         errors.put("timestamp", LocalDateTime.now());
         errors.put("status","Bad request");
         errors.put("error", "Unsupported character");
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<?> handleBigFile(MaxUploadSizeExceededException ex, WebRequest request){
+        Map<String, Object> errors = new LinkedHashMap<>();
+        errors.put("timestamp", LocalDateTime.now());
+        errors.put("status","Bad request");
+        errors.put("error", "File to big, you can only upload file up to 15MB");
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 

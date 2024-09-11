@@ -15,8 +15,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.NoPermissionException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -30,15 +32,17 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TaskAssignmentRepository taskAssignmentRepository;
     private final JavaMailSender mailSender;
+    private final ImageService imageService;
 
     public UserService(TaskRepository taskRepository, UserRepository userRepository,
                        TaskAssignmentRepository taskAssignmentRepository, PasswordEncoder passwordEncoder,
-                       JavaMailSender mailSender) {
+                       JavaMailSender mailSender, ImageService imageService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.taskAssignmentRepository = taskAssignmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.mailSender = mailSender;
+        this.imageService = imageService;
     }
 
     public void createUser(UserAccount userAccount){
@@ -55,6 +59,7 @@ public class UserService {
         userAccount.setVerificationCode(UUID.randomUUID().toString());
         userAccount.setPassword(passwordEncoder.encode(userAccount.getPassword()));
         userAccount.setProfilePicture("https://firebasestorage.googleapis.com/v0/b/task-manager-1eddc.appspot.com/o/defaultAvatar.jpg?alt=media&token=e7440e47-2b7a-4bba-b062-575b0c0443e9"); //default avatar
+        userAccount.setCreateAt(LocalDateTime.now());
         sendVerificationEmail(userAccount);
         userRepository.save(userAccount);
 
@@ -72,23 +77,42 @@ public class UserService {
         return UserMapper.toUserDto(user);
     }
 
-    public void updateUser(UserAccount updateUser, Integer userId){
+    public String updateUser(UserAccount updateUser, Integer userId, MultipartFile image){
         UserAccount user = checkUserId(userId);
         checkPermission(user);
+        if (image!=null) {
+            String uploadedImage = imageService.upload(image);
+            if (uploadedImage==null){
+                return "Fail to upload image. Your file is not valid image file or it may have a problem in connection";
+            }
+            updateUser.setProfilePicture(uploadedImage);
+            //delete the old picture to release spaces
+            imageService.deleteImage(user.getProfilePicture());
+        }
         if (updateUser.getPassword()!=null){
             updateUser.setPassword(passwordEncoder.encode(updateUser.getPassword()));
         }
         user.merge(updateUser);
         userRepository.save(user);
+        return "OK";
     }
 
-    public List<TaskAssignmentDto> getTasksByUser(Integer userid){
-        UserAccount user = checkUserId(userid);
+    public List<TaskAssignmentDto> getTasksByUser(Integer userId){
+        UserAccount user = checkUserId(userId);
         checkPermission(user);
         List<TaskAssignment> taskAssignmentList = user.getTaskAssignments();
         return taskAssignmentList.stream()
                 .map(TaskMapper::toTaskAssignmentDto)
                 .toList();
+    }
+
+    public TaskSummaryDto getTaskSummary(Integer userId){
+        UserAccount user = checkUserId(userId);
+        checkPermission(user);
+        return new TaskSummaryDto(user.getTaskAssignments().size()
+                ,taskRepository.countByCreator(user)
+                ,taskAssignmentRepository.countByTaskExecutorAndStatus(user, Task.Status.INPROGRESS)
+                ,taskAssignmentRepository.countByTaskExecutorAndStatus(user, Task.Status.COMPLETED));
     }
 
     public UserAccount checkUserId(Integer userId){

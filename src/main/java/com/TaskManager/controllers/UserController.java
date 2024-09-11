@@ -2,6 +2,7 @@ package com.TaskManager.controllers;
 
 import com.TaskManager.models.dto.TaskAssignmentDto;
 import com.TaskManager.models.dto.TaskDto;
+import com.TaskManager.models.dto.TaskSummaryDto;
 import com.TaskManager.models.dto.UserDto;
 import com.TaskManager.models.entities.Task;
 import com.TaskManager.models.entities.TaskAssignment;
@@ -13,8 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("api/v1/user")
@@ -37,14 +40,27 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public ResponseEntity<Void> updateUser(@PathVariable("userId") Integer userId,@RequestBody UserAccount updateUser){
-        userService.updateUser(updateUser,userId);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<String> updateUser(@PathVariable("userId") Integer userId,
+                                             @RequestPart(value = "image", required = false) MultipartFile image,
+                                             @ModelAttribute UserAccount updateUser
+                                             ){
+        String result = userService.updateUser(updateUser,userId, image);
+        if (result.equals("OK")) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/{userId}/tasks")
     public ResponseEntity<List<TaskAssignmentDto>> getTasksByUser(@PathVariable("userId") Integer userId){
         return new ResponseEntity<>(userService.getTasksByUser(userId), HttpStatus.OK);
+    }
+
+    @GetMapping("/{userId}/tasksummary")
+    public ResponseEntity<TaskSummaryDto> getTaskSummary(@PathVariable("userId") Integer userId){
+        return new ResponseEntity<>(userService.getTaskSummary(userId), HttpStatus.OK);
     }
 
 }
