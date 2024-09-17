@@ -1,5 +1,6 @@
 package com.TaskManager.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ public class Notification {
     @SequenceGenerator(allocationSize=1, schema="public",  name="TaskSequenceGenerator", sequenceName = "TaskSequence")
     private Integer id;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "userId")
     private UserAccount receiver;

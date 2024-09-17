@@ -6,6 +6,7 @@ import com.TaskManager.repositories.NotificationRepository;
 import com.TaskManager.repositories.TaskAssignmentRepository;
 import com.TaskManager.repositories.TaskRepository;
 import com.TaskManager.repositories.UserRepository;
+import com.google.api.gax.rpc.NotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Validation;
 import lombok.SneakyThrows;
@@ -16,9 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.naming.NoPermissionException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -135,23 +134,53 @@ public class TaskService {
         return TaskMapper.toTaskDetailDto(taskAssignment);
     }
 
-    public boolean assignTaskToUser(Integer taskId, Integer userId, String subTask){
+    public Map<String,String> assignTaskToUsers(Integer taskId, List<AddMemberDTO> members){
         Task task = checkTaskId(taskId);
-        UserAccount user = checkUserId(userId);
         checkPermission(task.getCreator());
-        Optional<TaskAssignment> checkExist = taskAssignmentRepository.findById(new UserTaskPK(userId,taskId));
-        if (checkExist.isPresent()){
-            return false;
+        Map<String, String> response = new HashMap<>();
+        for (AddMemberDTO member : members){
+            Optional<UserAccount> userAccountOpt = userRepository.findByEmail(member.email());
+            UserAccount user;
+            if (userAccountOpt.isEmpty()){
+                response.put(member.email(),"This user doesn't not exist");
+                continue;
+            }
+            user = userAccountOpt.get();
+            if (user.getId().equals(task.getCreator().getId())){
+                response.put(member.email(),"You can't invite yourself");
+                continue;
+            }
+            Optional<TaskAssignment> checkExist = taskAssignmentRepository.findById(new UserTaskPK(user.getId(),taskId));
+            if (checkExist.isPresent()){
+                response.put(member.email(),"This user has already been invited to this task");
+                continue;
+            }
+            TaskAssignment taskAssignment = new TaskAssignment();
+            taskAssignment.setIsAccepted(null);
+            taskAssignment.setTaskExecutor(user);
+            taskAssignment.setTask(task);
+            taskAssignment.setSubTaskName(member.subTask());
+            taskAssignment.setAssignedAt(LocalDateTime.now());
+            taskAssignment.setPriority(5);  //Default is 5
+            taskAssignment.setStatus(Task.Status.INPROGRESS);
+            taskAssignmentRepository.save(taskAssignment);
+
+            //Send notification
+            Notification notification = new Notification();
+            String content = "User %s (%s) has invited you to join '%s' task with job is '%s'";
+            String contentFormatted = String.format(content, task.getCreator().getName(),
+                    task.getCreator().getEmail(), task.getTaskName(), member.subTask());
+            notification.setNotification(contentFormatted);
+            notification.setTime(LocalDateTime.now());
+            notification.setReceiver(user);
+            notification.setRead(false);
+            notificationRepository.save(notification);
+
+            response.put(member.email(),"Your invitation has been sent successfully");
         }
-        TaskAssignment taskAssignment = new TaskAssignment();
-        taskAssignment.setTaskExecutor(user);
-        taskAssignment.setTask(task);
-        taskAssignment.setSubTaskName(subTask);
-        taskAssignment.setAssignedAt(LocalDateTime.now());
-        taskAssignment.setPriority(3);
-        taskAssignment.setStatus(Task.Status.INPROGRESS);
-        taskAssignmentRepository.save(taskAssignment);
-        return true;
+
+
+        return response;
     }
 
     //Update task assignment
@@ -227,6 +256,7 @@ public class TaskService {
         taskAssignmentRepository.deleteById(new UserTaskPK(userId,taskId));
         return true;
     }
+
 
     public Task checkTaskId(Integer taskId) {
         Optional<Task> taskOpt = taskRepository.findById(taskId);

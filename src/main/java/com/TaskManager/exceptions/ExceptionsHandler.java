@@ -143,7 +143,7 @@ public class ExceptionsHandler {
         Map<String, Object> errors = new LinkedHashMap<>();
         errors.put("timestamp", LocalDateTime.now());
         errors.put("status","Bad request");
-        errors.put("error", "File to big, you can only upload file up to 15MB");
+        errors.put("error", "File too big, you can only upload file up to 15MB");
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 

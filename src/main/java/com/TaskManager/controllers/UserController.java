@@ -4,12 +4,14 @@ import com.TaskManager.models.dto.TaskAssignmentDto;
 import com.TaskManager.models.dto.TaskDto;
 import com.TaskManager.models.dto.TaskSummaryDto;
 import com.TaskManager.models.dto.UserDto;
+import com.TaskManager.models.entities.Notification;
 import com.TaskManager.models.entities.Task;
 import com.TaskManager.models.entities.TaskAssignment;
 import com.TaskManager.models.entities.UserAccount;
 import com.TaskManager.services.TaskService;
 import com.TaskManager.services.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +63,16 @@ public class UserController {
     @GetMapping("/{userId}/tasksummary")
     public ResponseEntity<TaskSummaryDto> getTaskSummary(@PathVariable("userId") Integer userId){
         return new ResponseEntity<>(userService.getTaskSummary(userId), HttpStatus.OK);
+    }
+
+    @GetMapping("/{userId}/notification")
+    public ResponseEntity<List<Notification>> getLatestNotifications(
+            @PathVariable("userId") Integer userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Page<Notification> notificationsPage = userService.getLatestNotifications(userId, page, size);
+        List<Notification> notifications = notificationsPage.getContent();
+        return new ResponseEntity<>(notifications, HttpStatus.OK);
     }
 
 }

@@ -1,15 +1,20 @@
 package com.TaskManager.services;
 
 import com.TaskManager.models.dto.*;
+import com.TaskManager.models.entities.Notification;
 import com.TaskManager.models.entities.Task;
 import com.TaskManager.models.entities.TaskAssignment;
 import com.TaskManager.models.entities.UserAccount;
+import com.TaskManager.repositories.NotificationRepository;
 import com.TaskManager.repositories.TaskAssignmentRepository;
 import com.TaskManager.repositories.TaskRepository;
 import com.TaskManager.repositories.UserRepository;
 import jakarta.mail.internet.MimeMessage;
 import lombok.SneakyThrows;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,16 +38,18 @@ public class UserService {
     private final TaskAssignmentRepository taskAssignmentRepository;
     private final JavaMailSender mailSender;
     private final ImageService imageService;
+    private final NotificationRepository notificationRepository;
 
     public UserService(TaskRepository taskRepository, UserRepository userRepository,
                        TaskAssignmentRepository taskAssignmentRepository, PasswordEncoder passwordEncoder,
-                       JavaMailSender mailSender, ImageService imageService) {
+                       JavaMailSender mailSender, ImageService imageService, NotificationRepository notificationRepository) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.taskAssignmentRepository = taskAssignmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.mailSender = mailSender;
         this.imageService = imageService;
+        this.notificationRepository = notificationRepository;
     }
 
     public void createUser(UserAccount userAccount){
@@ -113,6 +120,12 @@ public class UserService {
                 ,taskRepository.countByCreator(user)
                 ,taskAssignmentRepository.countByTaskExecutorAndStatus(user, Task.Status.INPROGRESS)
                 ,taskAssignmentRepository.countByTaskExecutorAndStatus(user, Task.Status.COMPLETED));
+    }
+
+    public Page<Notification> getLatestNotifications(Integer userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        UserAccount user = checkUserId(userId);
+        return notificationRepository.findByReceiverOrderByTimeDesc(user, pageable);
     }
 
     public UserAccount checkUserId(Integer userId){
