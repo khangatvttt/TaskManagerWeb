@@ -17,6 +17,7 @@ public record TaskDetailDto(
         Task.Status personalStatus,
         LocalDateTime assignedAt,
         int priority,
-        int progression){
+        int progression,
+        Boolean accept){
 
 }

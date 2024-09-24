@@ -26,7 +26,8 @@ public class TaskMapper {
                 taskAssignment.getTask().getTaskName(),
                 taskAssignment.getSubTaskName(),
                 taskAssignment.getTask().getDueAt(),
-                taskAssignment.getStatus()
+                taskAssignment.getStatus(),
+                taskAssignment.getIsAccepted()
         );
     }
 
@@ -44,7 +45,8 @@ public class TaskMapper {
                 taskAssignment.getStatus(),
                 taskAssignment.getAssignedAt(),
                 taskAssignment.getPriority(),
-                taskAssignment.getProgression()
+                taskAssignment.getProgression(),
+                taskAssignment.getIsAccepted()
         );
     }
 }

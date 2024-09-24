@@ -26,4 +26,7 @@ public class Notification {
     private boolean isRead;
 
     private LocalDateTime time;
+
+    //The path to an object mentioned in notification
+    private String targetUrl;
 }

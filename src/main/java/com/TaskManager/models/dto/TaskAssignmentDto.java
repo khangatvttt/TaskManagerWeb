@@ -12,6 +12,7 @@ public record TaskAssignmentDto (
     String taskName,
     String subTask,
     LocalDateTime dueAt,
-    Task.Status status){
+    Task.Status status,
+    Boolean accept){
 
 }

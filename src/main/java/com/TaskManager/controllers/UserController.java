@@ -75,4 +75,10 @@ public class UserController {
         return new ResponseEntity<>(notifications, HttpStatus.OK);
     }
 
+    @GetMapping("/{userId}/notification/unread-count")
+    public Integer getUnreadNumber(@PathVariable("userId") Integer userId){
+        return userService.countUnreadNotification(userId);
+    }
+
+
 }

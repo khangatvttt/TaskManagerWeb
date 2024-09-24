@@ -128,6 +128,11 @@ public class UserService {
         return notificationRepository.findByReceiverOrderByTimeDesc(user, pageable);
     }
 
+    public Integer countUnreadNotification(Integer userId){
+        UserAccount user = checkUserId(userId);
+        return notificationRepository.countByIsReadAndReceiver(false, user);
+    }
+
     public UserAccount checkUserId(Integer userId){
         Optional<UserAccount> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()){

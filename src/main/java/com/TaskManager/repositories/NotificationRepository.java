@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface NotificationRepository extends JpaRepository<Notification,Integer> {
     Page<Notification> findByReceiverOrderByTimeDesc(UserAccount user, Pageable pageable);
+    Integer countByIsReadAndReceiver(Boolean read, UserAccount user);
 
 }
 

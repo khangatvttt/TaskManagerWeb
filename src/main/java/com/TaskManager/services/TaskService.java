@@ -6,11 +6,9 @@ import com.TaskManager.repositories.NotificationRepository;
 import com.TaskManager.repositories.TaskAssignmentRepository;
 import com.TaskManager.repositories.TaskRepository;
 import com.TaskManager.repositories.UserRepository;
-import com.google.api.gax.rpc.NotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Validation;
 import lombok.SneakyThrows;
-import org.apache.coyote.BadRequestException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -100,6 +98,7 @@ public class TaskService {
                 notification.setTime(LocalDateTime.now());
                 notification.setReceiver(assignment.getTaskExecutor());
                 notification.setNotification("\""+task.getTaskName() + "\" task has been updated by manager.");
+                notification.setTargetUrl("/user/"+assignment.getTaskExecutor().getId()+"/task/"+task.getId()+"/manage");
                 notification.setRead(false);
                 notificationRepository.save(notification);
             }
@@ -156,7 +155,7 @@ public class TaskService {
                 continue;
             }
             TaskAssignment taskAssignment = new TaskAssignment();
-            taskAssignment.setIsAccepted(null);
+            taskAssignment.setIsAccepted(false);
             taskAssignment.setTaskExecutor(user);
             taskAssignment.setTask(task);
             taskAssignment.setSubTaskName(member.subTask());
@@ -174,6 +173,7 @@ public class TaskService {
             notification.setTime(LocalDateTime.now());
             notification.setReceiver(user);
             notification.setRead(false);
+            notification.setTargetUrl("/user/"+user.getId()+"/task/"+task.getId());
             notificationRepository.save(notification);
 
             response.put(member.email(),"Your invitation has been sent successfully");
@@ -184,7 +184,7 @@ public class TaskService {
     }
 
     //Update task assignment
-    public boolean updateTaskAssignment(Integer taskId, Integer userId, TaskAssignment taskAssignment){
+    public boolean updateTaskAssignment(Integer taskId, Integer userId, TaskAssignment updatedTaskAssignment){
         checkTaskId(taskId);
         UserAccount user = checkUserId(userId);
         Optional<TaskAssignment> checkExist = taskAssignmentRepository.findById(new UserTaskPK(userId,taskId));
@@ -192,18 +192,26 @@ public class TaskService {
             return false;
         }
         checkPermission(user);
-        TaskAssignment updatedTaskAssignment = checkExist.get();
-        updatedTaskAssignment.merge(taskAssignment);
-        taskAssignmentRepository.save(updatedTaskAssignment);
+        TaskAssignment taskAssignment = checkExist.get();
+        Boolean checkAccept = taskAssignment.getIsAccepted();
+        taskAssignment.merge(updatedTaskAssignment);
+        taskAssignment.setIsAccepted(true); // Automatically accept task if user update the task
+        taskAssignmentRepository.save(taskAssignment);
 
         //Notify to owner of task about changes
-        if (!user.getId().equals(updatedTaskAssignment.getTask().getCreator().getId())) {
+        if (!user.getId().equals(taskAssignment.getTask().getCreator().getId())) {
             Notification notification = new Notification();
             notification.setRead(false);
             notification.setTime(LocalDateTime.now());
-            notification.setReceiver(updatedTaskAssignment.getTask().getCreator());
-            notification.setNotification(user.getName() + " has updated " + (user.getGender() ? "his" : "her")
-                    + " personal status in \"" + updatedTaskAssignment.getTask().getTaskName() + "\" task.");
+            notification.setReceiver(taskAssignment.getTask().getCreator());
+            if (checkAccept) {
+                notification.setNotification(user.getName() + " has updated " + (user.getGender() ? "his" : "her")
+                        + " personal status in \"" + taskAssignment.getTask().getTaskName() + "\" task.");
+            }
+            else{
+                notification.setNotification(user.getName() + " has accepted \"" + taskAssignment.getTask().getTaskName() + "\" task.");
+            }
+            notification.setTargetUrl("/user/" + taskAssignment.getTask().getCreator().getId() + "/task/" + taskAssignment.getTask().getId() + "/manage");
             notificationRepository.save(notification);
         }
         return true;
@@ -218,6 +226,7 @@ public class TaskService {
         if (checkExist.isEmpty()){
             return false;
         }
+        TaskAssignment taskAssignment = checkExist.get();
         UserAccount currentAuthUser = (UserAccount) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         //Only owner of the task or executor of task can cancel the assignment
         if (!currentAuthUser.getId().equals(userId) && !currentAuthUser.getId().equals(task.getCreator().getId())){
@@ -226,10 +235,10 @@ public class TaskService {
 
         //If owner abandon subtask, remove main task
         if (task.getCreator().getId().equals(userId)){
-            for (TaskAssignment taskAssignment: task.getTaskAssignments()){
-                if (!taskAssignment.getTaskExecutor().getId().equals(task.getCreator().getId())) {
+            for (TaskAssignment assignment : task.getTaskAssignments()){
+                if (!assignment.getTaskExecutor().getId().equals(task.getCreator().getId())) {
                     Notification notification = new Notification();
-                    notification.setReceiver(taskAssignment.getTaskExecutor());
+                    notification.setReceiver(assignment.getTaskExecutor());
                     notification.setRead(false);
                     notification.setNotification("\"" + task.getTaskName() + "\" task that you participated in has been deleted by manager.");
                     notification.setTime(LocalDateTime.now());
@@ -243,7 +252,6 @@ public class TaskService {
         }
 
         //Remove assignment in task
-        TaskAssignment taskAssignment = checkExist.get();
         List<TaskAssignment> taskAssignmentList = task.getTaskAssignments();
         taskAssignmentList.remove(taskAssignment);
         task.setTaskAssignments(taskAssignmentList);
@@ -254,6 +262,20 @@ public class TaskService {
         user.setTaskAssignments(taskAssignmentList);
         userRepository.save(user);
         taskAssignmentRepository.deleteById(new UserTaskPK(userId,taskId));
+
+        //Notify to owner of the task that a member has left the task
+        Notification notification = new Notification();
+        notification.setRead(false);
+        notification.setTime(LocalDateTime.now());
+        if (taskAssignment.getIsAccepted()) {
+            notification.setNotification(user.getName() + " has left '" + task.getTaskName() + "' task");
+        }
+        else {
+            notification.setNotification(user.getName() + " hasn't accepted to join '" + task.getTaskName() + "' task");
+        }
+        notification.setReceiver(task.getCreator());
+        notification.setTargetUrl("/user/"+task.getCreator().getId()+"/task/"+task.getId()+"/manage");
+        notificationRepository.save(notification);
         return true;
     }
 
