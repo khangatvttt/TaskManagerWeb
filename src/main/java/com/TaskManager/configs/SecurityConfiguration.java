@@ -49,6 +49,8 @@ public class SecurityConfiguration {
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("Authorization","Content-Type"));
 
+        configuration.setExposedHeaders(List.of("X-Total-Pages","X-Total-Elements"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**",configuration);

@@ -24,10 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.NoPermissionException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -104,13 +101,22 @@ public class UserService {
         return "OK";
     }
 
-    public List<TaskAssignmentDto> getTasksByUser(Integer userId){
+    public Page<TaskAssignmentDto> getTasksByUser(Integer userId, String status, String taskName, int page, int size) {
         UserAccount user = checkUserId(userId);
         checkPermission(user);
-        List<TaskAssignment> taskAssignmentList = user.getTaskAssignments();
-        return taskAssignmentList.stream()
-                .map(TaskMapper::toTaskAssignmentDto)
-                .toList();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TaskAssignment> taskAssignmentPage;
+
+        if (status.equals("All")) {
+            taskAssignmentPage = taskAssignmentRepository.findByTaskExecutorAndTask_TaskNameContainingIgnoreCaseOrTaskExecutorAndSubTaskNameContainingIgnoreCase(user, pageable, taskName,user, taskName);
+        } else if (status.equals("Invitation")){
+            taskAssignmentPage = taskAssignmentRepository.findByTaskExecutorAndIsAcceptedAndTask_TaskNameContainingIgnoreCaseOrTaskExecutorAndIsAcceptedAndSubTaskNameContainingIgnoreCase(
+                    user, pageable, false, taskName, user, false, taskName);
+        } else {
+            taskAssignmentPage = taskAssignmentRepository.findByTaskExecutorAndStatusAndTask_TaskNameContainingIgnoreCaseOrTaskExecutorAndStatusAndSubTaskNameContainingIgnoreCase(
+                    user, Task.Status.valueOf(status.toUpperCase(Locale.ROOT)), pageable, taskName, user, Task.Status.valueOf(status.toUpperCase(Locale.ROOT)), taskName);
+        }
+        return taskAssignmentPage.map(TaskMapper::toTaskAssignmentDto);
     }
 
     public TaskSummaryDto getTaskSummary(Integer userId){
@@ -122,15 +128,35 @@ public class UserService {
                 ,taskAssignmentRepository.countByTaskExecutorAndStatus(user, Task.Status.COMPLETED));
     }
 
+    public String getAvatar(Integer userId){
+        UserAccount user = checkUserId(userId);
+        checkPermission(user);
+        return user.getProfilePicture();
+    }
+
     public Page<Notification> getLatestNotifications(Integer userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         UserAccount user = checkUserId(userId);
+        checkPermission(user);
         return notificationRepository.findByReceiverOrderByTimeDesc(user, pageable);
     }
 
     public Integer countUnreadNotification(Integer userId){
         UserAccount user = checkUserId(userId);
+        checkPermission(user);
         return notificationRepository.countByIsReadAndReceiver(false, user);
+    }
+
+    public void setReadNotification(Integer userId, Integer notificationId, Boolean isRead){
+        UserAccount user = checkUserId(userId);
+        checkPermission(user);
+        Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
+        if (notificationOpt.isEmpty()){
+            throw new NoSuchElementException("Notification with id "+notificationId+" doesn't exist");
+        }
+        Notification notification = notificationOpt.get();
+        notification.setRead(isRead);
+        notificationRepository.save(notification);
     }
 
     public UserAccount checkUserId(Integer userId){

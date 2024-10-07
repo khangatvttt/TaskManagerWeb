@@ -1,9 +1,6 @@
 package com.TaskManager.controllers;
 
-import com.TaskManager.models.dto.AddMemberDTO;
-import com.TaskManager.models.dto.TaskDetailDto;
-import com.TaskManager.models.dto.TaskDto;
-import com.TaskManager.models.dto.UserDto;
+import com.TaskManager.models.dto.*;
 import com.TaskManager.models.entities.Task;
 import com.TaskManager.models.entities.TaskAssignment;
 import com.TaskManager.services.TaskService;
@@ -55,9 +52,12 @@ public class TaskController {
 
     //Get Task Assignment
     @GetMapping("/{taskId}/user/{userId}")
-    public ResponseEntity<TaskDetailDto> assignTaskToUser(@PathVariable("taskId") Integer taskId,
+    public ResponseEntity<TaskDetailDto> getTaskAssignmentOfUser(@PathVariable("taskId") Integer taskId,
                                                           @PathVariable("userId") Integer userId){
         TaskDetailDto result = taskService.getTaskAssignment(userId, taskId);
+        if (result==null){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
     //Assign Task to Users
@@ -94,14 +94,10 @@ public class TaskController {
     }
     //Get all users that participant in the task
     @GetMapping("/{taskId}/users")
-    public ResponseEntity<List<UserDto>> getUsersInTask(@PathVariable("taskId") Integer taskId){
-        List<UserDto> userDtoList = taskService.getExecutorInTask(taskId);
-        if (userDtoList!=null) {
-            return new ResponseEntity<>(userDtoList, HttpStatus.OK);
-        }
-        else {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+    public ResponseEntity<List<UserTaskDTO>> getUsersInTask(@PathVariable("taskId") Integer taskId){
+        List<UserTaskDTO> userTaskDTOList = taskService.getExecutorInTask(taskId);
+        return new ResponseEntity<>(userTaskDTOList, HttpStatus.OK);
+
     }
 
 

@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.naming.NoPermissionException;
@@ -146,6 +147,25 @@ public class ExceptionsHandler {
         errors.put("error", "File too big, you can only upload file up to 15MB");
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<?> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request){
+        Map<String, Object> errors = new LinkedHashMap<>();
+        errors.put("timestamp", LocalDateTime.now());
+        errors.put("status","Bad request");
+        errors.put("error", "Your request is invalid format");
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request){
+        Map<String, Object> errors = new LinkedHashMap<>();
+        errors.put("timestamp", LocalDateTime.now());
+        errors.put("status","Bad request");
+        errors.put("error", "Your request is invalid format");
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
 
 }
 

@@ -12,6 +12,7 @@ import com.TaskManager.services.TaskService;
 import com.TaskManager.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -56,14 +57,28 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/tasks")
-    public ResponseEntity<List<TaskAssignmentDto>> getTasksByUser(@PathVariable("userId") Integer userId){
-        return new ResponseEntity<>(userService.getTasksByUser(userId), HttpStatus.OK);
+    public ResponseEntity<List<TaskAssignmentDto>> getTasksByUser(@PathVariable("userId") Integer userId,
+                                                                  @RequestParam String status,
+                                                                  @RequestParam String taskName,
+                                                                  @RequestParam int page,
+                                                                  @RequestParam int size){
+        Page<TaskAssignmentDto> result = userService.getTasksByUser(userId, status, taskName, page, size);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Total-Pages", String.valueOf(result.getTotalPages()));
+        headers.set("X-Total-Elements", String.valueOf(result.getTotalElements()));
+        return new ResponseEntity<>(result.getContent(), headers, HttpStatus.OK);
     }
 
     @GetMapping("/{userId}/tasksummary")
     public ResponseEntity<TaskSummaryDto> getTaskSummary(@PathVariable("userId") Integer userId){
         return new ResponseEntity<>(userService.getTaskSummary(userId), HttpStatus.OK);
     }
+
+    @GetMapping("/{userId}/getavatar")
+    public ResponseEntity<String> getAvatar(@PathVariable("userId") Integer userId) {
+        return new ResponseEntity<>(userService.getAvatar(userId), HttpStatus.OK);
+    }
+
 
     @GetMapping("/{userId}/notification")
     public ResponseEntity<List<Notification>> getLatestNotifications(
@@ -78,6 +93,14 @@ public class UserController {
     @GetMapping("/{userId}/notification/unread-count")
     public Integer getUnreadNumber(@PathVariable("userId") Integer userId){
         return userService.countUnreadNotification(userId);
+    }
+
+    @GetMapping("/{userId}/notification/{notificationId}")
+    public ResponseEntity<Void> setReadNotification(@PathVariable("userId") Integer userId,
+                                                    @PathVariable("notificationId") Integer notiId,
+                                                    @RequestParam("read") Boolean isRead){
+        userService.setReadNotification(userId, notiId, isRead);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 

@@ -112,12 +112,12 @@ public class TaskService {
         taskRepository.delete(task);
     }
 
-    public List<UserDto> getExecutorInTask(Integer taskId) {
+    public List<UserTaskDTO> getExecutorInTask(Integer taskId) {
         Task task = checkTaskId(taskId);
         checkPermission(task.getCreator());
         List<TaskAssignment> taskAssignmentList = task.getTaskAssignments();
         return taskAssignmentList.stream()
-                .map(taskAssignment -> UserMapper.toUserDto(taskAssignment.getTaskExecutor()))
+                .map(UserMapper::toUserTaskDto)
                 .collect(Collectors.toList());
     }
 
